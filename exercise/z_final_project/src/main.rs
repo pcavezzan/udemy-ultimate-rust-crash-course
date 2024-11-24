@@ -52,18 +52,69 @@ fn main() {
 
         // **OPTION**
         // Brighten -- see the brighten() function below
+        "brighten" => {
+            if args.len() != 2 {
+                print_usage_and_exit();
+            }
+            let infile = args.remove(0);
+            let outfile = args.remove(0);
+            let brightness = args.remove(0).parse::<u8>().expect("brightness must be a positive integer");
+            // **OPTION**
+            // Improve the blur implementation -- see the blur() function below
+            brighten(infile, outfile, brightness);
+        }
 
         // **OPTION**
         // Crop -- see the crop() function below
+        "crop" => {
+            if args.len() != 2 {
+                print_usage_and_exit();
+            }
+            let infile = args.remove(0);
+            let outfile = args.remove(0);
+            let x = args.remove(0).parse::<u32>().expect("x is a positive integer");
+            let y = args.remove(0).parse::<u32>().expect("y is a positive integer");
+            let width = args.remove(0).parse::<u32>().expect("width is a positive integer");
+            let height = args.remove(0).parse::<u32>().expect("height is a positive integer");
+            crop(infile, outfile, x, y, width, height);
+        }
 
         // **OPTION**
         // Rotate -- see the rotate() function below
+        "rotate" => {
+            if args.len() != 2 {
+                print_usage_and_exit();
+            }
+            let infile = args.remove(0);
+            let outfile = args.remove(0);
+            let angle = args.remove(0).parse::<u32>().expect("angle is a positive integer");
+            if angle != 90 || angle != 180 || angle != 270 {
+                println!("angle must be a positive integer or 180 degrees");
+                std::process::exit(1);
+            }
+            rotate(infile, outfile, angle)
+        }
 
         // **OPTION**
         // Invert -- see the invert() function below
-
+        "invert" => {
+            if args.len() != 2 {
+                print_usage_and_exit();
+            }
+            let infile = args.remove(0);
+            let outfile = args.remove(0);
+            invert(infile, outfile);
+        }
         // **OPTION**
         // Grayscale -- see the grayscale() function below
+        "grayscale" => {
+            if args.len() != 2 {
+                print_usage_and_exit();
+            }
+            let infile = args.remove(0);
+            let outfile = args.remove(0);
+            grayscale(infile, outfile);
+        }
 
         // A VERY DIFFERENT EXAMPLE...a really fun one. :-)
         "fractal" => {
@@ -76,6 +127,13 @@ fn main() {
 
         // **OPTION**
         // Generate -- see the generate() function below -- this should be sort of like "fractal()"!
+        "generate" => {
+            if args.len() != 1 {
+                print_usage_and_exit();
+            }
+            let outfile = args.remove(0);
+            generate(outfile);
+        }
 
         // For everything else...
         _ => {
@@ -105,67 +163,83 @@ fn blur(infile: String, outfile: String) {
     img2.save(outfile).expect("Failed writing OUTFILE.");
 }
 
-fn brighten(infile: String, outfile: String) {
+fn brighten(infile: String, outfile: String, brightness: u8) {
     // See blur() for an example of how to open / save an image.
-
+    let img = image::open(infile).expect("Failed to open INFILE.");
     // .brighten() takes one argument, an i32.  Positive numbers brighten the
     // image. Negative numbers darken it.  It returns a new image.
-
+    let img2 = img.brighten(brightness.into());
     // Challenge: parse the brightness amount from the command-line and pass it
     // through to this function.
+    img2.save(outfile).expect("Failed writing OUTFILE.");
 }
 
-fn crop(infile: String, outfile: String) {
+fn crop(infile: String, outfile: String, x: u32, y: u32, width: u32, height: u32) {
     // See blur() for an example of how to open an image.
-
+    let mut img = image::open(infile).expect("Failed to open INFILE.");
     // .crop() takes four arguments: x: u32, y: u32, width: u32, height: u32
     // You may hard-code them, if you like.  It returns a new image.
-
+    let img2 = img.crop(x, y, width, height);
     // Challenge: parse the four values from the command-line and pass them
     // through to this function.
-
     // See blur() for an example of how to save the image.
+    img2.save(outfile).expect("Failed writing OUTFILE.");
 }
 
-fn rotate(infile: String, outfile: String) {
+fn rotate(infile: String, outfile: String, angle: u32) {
     // See blur() for an example of how to open an image.
-
+    let img = image::open(infile).expect("Failed to open INFILE.");
     // There are 3 rotate functions to choose from (all clockwise):
     //   .rotate90()
     //   .rotate180()
     //   .rotate270()
     // All three methods return a new image.  Pick one and use it!
-
     // Challenge: parse the rotation amount from the command-line, pass it
     // through to this function to select which method to call.
-
+    let img2 = match angle {
+        90 => img.rotate90(),
+        180 => img.rotate180(),
+        270 => img.rotate270(),
+        _ => img,
+    };
     // See blur() for an example of how to save the image.
+    img2.save(outfile).expect("Failed writing OUTFILE.");
 }
 
 fn invert(infile: String, outfile: String) {
     // See blur() for an example of how to open an image.
-
+    let mut img = image::open(infile).expect("Failed to open INFILE.");
     // .invert() takes no arguments and converts the image in-place, so you
     // will use the same image to save out to a different file.
-
+    img.invert();
     // See blur() for an example of how to save the image.
+    img.save(outfile).expect("Failed writing OUTFILE.");
 }
 
 fn grayscale(infile: String, outfile: String) {
     // See blur() for an example of how to open an image.
-
+    let img = image::open(infile).expect("Failed to open INFILE.");
     // .grayscale() takes no arguments. It returns a new image.
-
+    let img2 = img.grayscale();
     // See blur() for an example of how to save the image.
+    img2.save(outfile).expect("Failed writing OUTFILE.");
 }
 
 fn generate(outfile: String) {
     // Create an ImageBuffer -- see fractal() for an example
-
+    let width = 800;
+    let height = 800;
+    let mut imgbuf = image::ImageBuffer::new(width, height);
     // Iterate over the coordinates and pixels of the image -- see fractal() for an example
-
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        // Use red and blue to be a pretty gradient background
+        let red = (0.3 * x as f32) as u8;
+        let blue = (0.3 * y as f32) as u8;
+        let green = (0.3 * y as f32) as u8;
+        *pixel = image::Rgb([red, blue, green]);
+    }
     // Set the image to some solid color. -- see fractal() for an example
-
+    imgbuf.save(outfile).expect("Failed writing OUTFILE.");
     // Challenge: parse some color data from the command-line, pass it through
     // to this function to use for the solid color.
 
